@@ -12,7 +12,7 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: true,
     proxy: {
-      '^/(predict-at|risk|elevation|place-name|rainfall|forecast-rainfall|forecast-risk|soil-wetness|heatmap|decision|reports|alerts|health)': {
+      '^/(predict-at|risk|elevation|place-name|rainfall|forecast-rainfall|forecast-risk|soil-wetness|heatmap|decision|reports|alerts|health|auth)': {
         target: API_TARGET,
         changeOrigin: true,
       },

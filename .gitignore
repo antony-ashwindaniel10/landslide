@@ -6,3 +6,5 @@ mobile-app/.expo/
 .git/
 .env
 .env.*
+data/runtime/auth.sqlite
+data/runtime/images/

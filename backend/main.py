@@ -1,6 +1,9 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
+
+from backend.auth_service import init_auth, login, logout, register_user, user_from_token
 import joblib
 import math
 import os
@@ -17,6 +20,9 @@ from backend.decision_service import (
     build_heatmap,
     estimate_terrain,
     list_alerts,
+    list_reports,
+    report_image_path,
+    review_report,
     save_alert,
     save_report,
 )
@@ -31,6 +37,39 @@ app = FastAPI(
     description="AI-Based Landslide Risk Monitoring System for North Eastern India",
     version="2.4.1"
 )
+
+init_auth()
+
+
+def _bearer_token(authorization: str | None) -> str:
+    if not authorization:
+        return ""
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token.strip():
+        return ""
+    return token.strip()
+
+
+def current_user(authorization: str | None = Header(default=None)):
+    user = user_from_token(_bearer_token(authorization))
+    if user is None:
+        raise HTTPException(status_code=401, detail="Sign in required")
+    return user
+
+
+def require_admin(user: dict = Depends(current_user)):
+    if user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+
+_IMAGE_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/jpg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+}
 
 
 # ============================================================
@@ -115,7 +154,26 @@ class ReportRequest(BaseModel):
     longitude: float
     note: str = ""
     reporter: str = "Citizen"
+    category: str = "Ground observation"
     image_base64: str | None = None
+
+
+class LoginRequest(BaseModel):
+
+    username: str
+    password: str
+
+
+class RegisterRequest(BaseModel):
+
+    username: str
+    password: str
+    display_name: str
+
+
+class ReviewRequest(BaseModel):
+
+    status: str
 
 
 class AlertRequest(BaseModel):
@@ -1052,29 +1110,102 @@ def decision_api(
     )
 
 
+@app.post("/auth/login")
+def login_api(data: LoginRequest):
+    result = login(data.username, data.password)
+    if result is None:
+        raise HTTPException(status_code=401, detail="Username or password is wrong")
+    return result
+
+
+@app.post("/auth/register")
+def register_api(data: RegisterRequest):
+    try:
+        result = register_user(data.username, data.password, data.display_name)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    return result
+
+
+@app.get("/auth/me")
+def me_api(user: dict = Depends(current_user)):
+    return user
+
+
+@app.post("/auth/logout")
+def logout_api(authorization: str | None = Header(default=None)):
+    logout(_bearer_token(authorization))
+    return {"ok": True}
+
+
+@app.get("/reports")
+def reports_list_api(user: dict = Depends(require_admin)):
+    return {"reports": list_reports()}
+
+
+@app.get("/reports/mine")
+def reports_mine_api(user: dict = Depends(current_user)):
+    return {"reports": list_reports(username=user["username"])}
+
+
+@app.get("/reports/{report_id}/image")
+def report_image_api(report_id: str):
+    path = report_image_path(report_id)
+    if path is None:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    return FileResponse(path)
+
+
+@app.post("/reports/{report_id}/review")
+def review_report_api(
+    report_id: str,
+    data: ReviewRequest,
+    user: dict = Depends(require_admin),
+):
+    try:
+        updated = review_report(report_id, data.status, user["username"])
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return updated
+
+
 @app.post("/reports")
-def reports_api(data: ReportRequest):
+def reports_api(data: ReportRequest, user: dict = Depends(current_user)):
 
     image_bytes = None
+    image_ext = ".jpg"
     if data.image_base64:
         import base64
         try:
-            payload = data.image_base64.split(",")[-1]
-            image_bytes = base64.b64decode(payload)
+            header, _, payload = data.image_base64.partition(",")
+            if ";base64" in header:
+                mime = header.split(":", 1)[-1].split(";", 1)[0].lower()
+                image_ext = _IMAGE_TYPES.get(mime, ".jpg")
+                encoded = payload
+            else:
+                encoded = data.image_base64
+            image_bytes = base64.b64decode(encoded)
         except Exception:
             image_bytes = None
+        if image_bytes is not None and len(image_bytes) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Photo must be under 5 MB")
 
     return save_report(
         data.latitude,
         data.longitude,
         data.note,
-        data.reporter,
+        data.reporter or user["display_name"],
         image_bytes,
+        username=user["username"],
+        category=data.category,
+        image_ext=image_ext,
     )
 
 
 @app.post("/alerts")
-def alerts_api(data: AlertRequest):
+def alerts_api(data: AlertRequest, user: dict = Depends(require_admin)):
 
     return save_alert(
         data.latitude,

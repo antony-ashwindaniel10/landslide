@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
+import { API_BASE, authHeaders } from "./api";
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? "";
 const QUEUE_KEY = "ldt-report-queue";
 
 function readQueue() {
@@ -18,7 +18,7 @@ function writeQueue(items) {
 async function postReport(report) {
   const response = await fetch(`${API_BASE}/reports`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(report),
   });
   if (!response.ok) {
@@ -169,7 +169,7 @@ export default function DecisionCentre({
     if (!decision) return;
     const response = await fetch(`${API_BASE}/alerts`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: authHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         latitude,
         longitude,

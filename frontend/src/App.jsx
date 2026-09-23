@@ -15,6 +15,7 @@ import "./App.css";
 import HistoricalLandslidesLayer from "./HistoricalLandslidesLayer";
 import DecisionCentre from "./DecisionCentre";
 import RiskHeatmapLayer from "./RiskHeatmapLayer";
+import ReportInbox from "./ReportInbox";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "";
 
@@ -1255,7 +1256,7 @@ function RainfallForecast({
 // MAIN APP
 // ============================================================
 
-function App() {
+function App({ session, onLogout }) {
 
 
   // ==========================================================
@@ -1659,11 +1660,27 @@ function App() {
         </div>
 
 
-        <div className="status">
+        <div className="header-actions">
 
-          <span className="status-dot"></span>
+          <div className="status">
 
-          System Online
+            <span className="status-dot"></span>
+
+            System Online
+
+          </div>
+
+          {session && (
+            <div className="session-chip">
+              <div>
+                <strong>{session.display_name}</strong>
+                <span>Admin</span>
+              </div>
+              <button type="button" onClick={onLogout}>
+                Sign out
+              </button>
+            </div>
+          )}
 
         </div>
 
@@ -2186,6 +2203,8 @@ function App() {
         />
 
       </section>
+
+      <ReportInbox />
 
 
       {/* ====================================================

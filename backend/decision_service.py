@@ -22,6 +22,7 @@ DATASET_PATH = os.path.join(
 RUNTIME_DIR = os.path.join(BASE_DIR, "data", "runtime")
 REPORTS_PATH = os.path.join(RUNTIME_DIR, "citizen_reports.json")
 ALERTS_PATH = os.path.join(RUNTIME_DIR, "alerts.json")
+IMAGE_DIR = os.path.join(RUNTIME_DIR, "images")
 
 _LOCK = threading.Lock()
 _OSM_CACHE = {}
@@ -232,23 +233,93 @@ def analyze_evidence(note, image_bytes=None):
     }
 
 
-def save_report(latitude, longitude, note, reporter="Citizen", image_bytes=None):
+def _safe_report_id(report_id):
+    if not isinstance(report_id, str) or not report_id.startswith("RPT-"):
+        return None
+    suffix = report_id[4:]
+    if not suffix.isdigit():
+        return None
+    return report_id
+
+
+def save_report(
+    latitude,
+    longitude,
+    note,
+    reporter="Citizen",
+    image_bytes=None,
+    username="",
+    category="Ground observation",
+    image_ext=".jpg",
+):
     analysis = analyze_evidence(note, image_bytes)
+    report_id = f"RPT-{int(time.time() * 1000)}"
     report = {
-        "id": f"RPT-{int(time.time())}",
+        "id": report_id,
         "latitude": latitude,
         "longitude": longitude,
         "note": note,
         "reporter": reporter,
+        "username": username,
+        "category": category or "Ground observation",
+        "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "analysis": analysis,
         "synced": True,
+        "has_image": False,
     }
+    if image_bytes:
+        os.makedirs(IMAGE_DIR, exist_ok=True)
+        filename = f"{report_id}{image_ext}"
+        with open(os.path.join(IMAGE_DIR, filename), "wb") as handle:
+            handle.write(image_bytes)
+        report["has_image"] = True
+        report["image_url"] = f"/reports/{report_id}/image"
     with _LOCK:
         reports = _load_json(REPORTS_PATH)
         reports.append(report)
         _save_json(REPORTS_PATH, reports[-200:])
     return report
+
+
+def list_reports(username=None):
+    reports = _load_json(REPORTS_PATH)
+    if username:
+        reports = [item for item in reports if item.get("username") == username]
+    return list(reversed(reports))[:50]
+
+
+def review_report(report_id, status, reviewer):
+    if status not in {"verified", "dismissed", "pending"}:
+        raise ValueError("Unknown review status")
+    safe_id = _safe_report_id(report_id)
+    if not safe_id:
+        return None
+    with _LOCK:
+        reports = _load_json(REPORTS_PATH)
+        found = None
+        for report in reports:
+            if report.get("id") == safe_id:
+                report["status"] = status
+                report["reviewed_by"] = reviewer
+                report["reviewed_at"] = datetime.now(timezone.utc).isoformat()
+                found = report
+                break
+        if found is None:
+            return None
+        _save_json(REPORTS_PATH, reports)
+    return found
+
+
+def report_image_path(report_id):
+    safe_id = _safe_report_id(report_id)
+    if not safe_id:
+        return None
+    for ext in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+        path = os.path.join(IMAGE_DIR, f"{safe_id}{ext}")
+        if os.path.isfile(path):
+            return path
+    return None
 
 
 def save_alert(latitude, longitude, place, level, score, language, channel):

@@ -1325,4 +1325,314 @@ footer {
     flex-direction: column;
   }
 
+  .field-layout,
+  .report-inbox li {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+/* ============================================================
+   SIGN IN AND FIELD REPORTS
+   ============================================================ */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.session-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 8px 10px 8px 14px;
+  border-radius: 30px;
+  color: white;
+}
+
+.session-chip strong,
+.session-chip span {
+  display: block;
+}
+
+.session-chip span {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.session-chip button,
+.inbox-actions button,
+.field-actions button,
+.login-submit,
+.login-switch button,
+.demo-account {
+  font: inherit;
+  cursor: pointer;
+}
+
+.session-chip button {
+  border: 0;
+  background: white;
+  color: #0f172a;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 650;
+}
+
+.gate-loading,
+.login-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, #1e3a8a, transparent 42%),
+    #0f172a;
+  color: white;
+}
+
+.login-card {
+  width: min(560px, 100%);
+  background: #f8fafc;
+  color: #172033;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+}
+
+.login-card h1 {
+  margin: 6px 0 8px;
+  font-size: 32px;
+}
+
+.login-lead {
+  margin: 0 0 18px;
+  color: #475569;
+}
+
+.login-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.login-switch button {
+  border: 1px solid #cbd5e1;
+  background: white;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.login-switch button.active {
+  background: #1e3a8a;
+  color: white;
+  border-color: #1e3a8a;
+}
+
+.login-form,
+.field-card {
+  display: grid;
+  gap: 12px;
+}
+
+.login-form label,
+.field-card label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.login-form input,
+.field-card input,
+.field-card select,
+.field-card textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px;
+  font: inherit;
+  background: white;
+}
+
+.field-card textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.login-submit {
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  background: #1d4ed8;
+  color: white;
+  font-weight: 700;
+}
+
+.login-submit:disabled,
+.field-actions button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.login-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.demo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.demo-account {
+  text-align: left;
+  border: 1px solid #dbeafe;
+  background: #eff6ff;
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.demo-account span,
+.demo-account em {
+  color: #475569;
+  font-style: normal;
+  font-size: 13px;
+}
+
+.field-layout {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 18px;
+}
+
+.field-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 18px;
+  align-content: start;
+}
+
+.field-card h2 {
+  margin: 0;
+}
+
+.field-map {
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.field-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  color: #475569;
+  font-size: 13px;
+}
+
+.field-actions button,
+.inbox-actions button {
+  border: 0;
+  background: #0f172a;
+  color: white;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.inbox-actions button.ghost {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.field-risk {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.field-risk.level-green { background: #dcfce7; }
+.field-risk.level-yellow { background: #fef9c3; }
+.field-risk.level-orange { background: #ffedd5; }
+.field-risk.level-red { background: #fee2e2; }
+
+.photo-preview,
+.report-inbox img,
+.inbox-placeholder {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #e2e8f0;
+}
+
+.inbox-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 25px 20px;
+}
+
+.report-inbox {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.report-inbox li {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: white;
+}
+
+.report-inbox p,
+.report-inbox em {
+  margin: 4px 0 0;
+  color: #475569;
+  font-size: 13px;
+}
+
+.inbox-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.inbox-placeholder {
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  font-size: 12px;
+}
+
+@media (max-width: 800px) {
+  .demo-grid,
+  .login-switch,
+  .field-layout,
+  .report-inbox li {
+    grid-template-columns: 1fr;
+  }
 }
