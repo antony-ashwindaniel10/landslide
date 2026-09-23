@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
 import L from "leaflet";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = import.meta.env.VITE_API_BASE ?? "";
 
 function colorFor(score) {
   if (score >= 75) return "#dc2626";
