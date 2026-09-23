@@ -1,0 +1,6 @@
+latitude,longitude,rainfall,soil_moisture,slope,elevation,historical_landslide
+27.4728,94.9120,120,65,35,1200,true
+27.4835,94.9250,180,78,42,1450,true
+27.4500,94.8800,60,45,20,800,false
+27.5200,94.9500,220,85,38,1600,true
+27.4300,94.9000,40,35,12,600,false
